@@ -1,2 +1,2 @@
-.idea
-*.pkl
+.idea/
+__pycache__/

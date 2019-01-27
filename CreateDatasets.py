@@ -5,9 +5,7 @@ from sklearn.model_selection import train_test_split
 from nltk.tokenize import word_tokenize, sent_tokenize
 
 
-def load_dataset(dataset_type, max_questions=2000):
-	global infersent
-
+def load_dataset(dataset_type):
 	if dataset_type == 'train':
 		path = 'Dataset/train-v2.0.json'
 	else:
@@ -40,19 +38,18 @@ def load_dataset(dataset_type, max_questions=2000):
 				new_sentence = word_tokenize(question.lower())
 
 				highest_tags = model_doc2vec.docvecs.most_similar(positive=[model_doc2vec.infer_vector(new_sentence)],
-																 topn=5)
+																  topn=5)
 
 				focused_context = ''
 				prev_sent = ''
 				for ht in highest_tags:
 					tag_index = ht[1]
 					if prev_sent != sentences[int(tag_index)]:
-						focused_context = focused_context+' '+sentences[int(tag_index)]
+						focused_context = focused_context + ' ' + sentences[int(tag_index)]
 						prev_sent = sentences[int(tag_index)]
 
-				focused_context=focused_context.strip()
-				if max_questions is not None and q_count == max_questions:
-					return res
+				focused_context = focused_context.strip()
+
 				if q_count % 250 == 0 and q_count != 0:
 					print('{} questions done'.format(q_count))
 
@@ -68,13 +65,15 @@ def load_dataset(dataset_type, max_questions=2000):
 	return res
 
 
-x = load_dataset('train', max_questions=2000)
+x = load_dataset('train')
 train, validation = train_test_split(x, test_size=0.15)
+
 with open('train_data.pkl', 'wb') as f:
 	pickle.dump(train, f)
+
 with open('validation_data.pkl', 'wb') as f:
 	pickle.dump(validation, f)
 
-test = load_dataset('test', max_questions=2000)
+test = load_dataset('test')
 with open('test_data.pkl', 'wb') as f:
 	pickle.dump(test, f)

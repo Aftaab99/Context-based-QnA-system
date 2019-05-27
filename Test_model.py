@@ -12,7 +12,7 @@ with open('test_data.pkl', 'rb') as f:
     test_data = pickle.load(f)
 
 model = build_model(preprocessing.tokenizer)
-model.load_weights('Models/weights-improvement-02-10.59.hdf5')
+model.load_weights('Models/model.hdf5')
 
 preprocessed_test_data = list()
 for sample in test_data:

@@ -24,16 +24,13 @@ print('Vocabulary size: {}'.format(preprocessing.vocab_size))
 
 preprocessed_train_data = list()
 for sample in train_data:
-    if sample[4] < 325 or sample[3] == -1:
+    if sample[4] < 325 or sample[3] == -1:  # Only considering contexts smaller than 325 words
         preprocessed_train_data.append(preprocessing.text_to_seq_sample(sample))
 
 with open('preprocessing.pkl', 'wb') as f:
     pickle.dump(preprocessing, f)
 
 print('Done with processing..')
-c = preprocessed_train_data[65][0]
-print(preprocessing.sequence_to_text(c))
-x = preprocessed_train_data[65][3]
 
 model = build_model(preprocessing.tokenizer)
 

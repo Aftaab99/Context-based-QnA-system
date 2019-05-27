@@ -5,26 +5,32 @@ from keras.layers import Embedding, Dense, Input, Lambda, GRU, Bidirectional, Fl
 from keras.backend import softmax, concatenate, int_shape, reshape, batch_dot
 from keras import regularizers
 from keras.optimizers import RMSprop
+import params
 
 
 def build_model(tokenizer):
     embedding_weights = load_pretrained_embedding(
-        '/home/aftaab/Datasets/glove.6B', 50, tokenizer)
+        'Datasets/glove.6B', params.EMBEDDING_SIZE, tokenizer)
 
     # Model layers
-    question = Input(shape=(22,))
-    context = Input(shape=(325,))
-    embedding = Embedding(len(tokenizer.word_index) + 2, 50, weights=[embedding_weights], trainable=False)
-    question_encoder = Bidirectional(GRU(200, input_shape=(22, 50), return_sequences=True, recurrent_dropout=0.2))
-    context_encoder = Bidirectional(GRU(200, input_shape=(325, 50), return_sequences=True, recurrent_dropout=0.4))
+    question = Input(shape=(params.QUESTION_LEN,))
+    context = Input(shape=(params.CONTEXT_LEN,))
+    embedding = Embedding(len(tokenizer.word_index) + 2, params.EMBEDDING_SIZE, weights=[embedding_weights],
+                          trainable=False)
+    question_encoder = Bidirectional(
+        GRU(params.HIDDEN_GRU_UNITS, input_shape=(params.QUESTION_LEN, params.EMBEDDING_SIZE), return_sequences=True,
+            recurrent_dropout=0.2))
+    context_encoder = Bidirectional(
+        GRU(params.HIDDEN_GRU_UNITS, input_shape=(params.CONTEXT_LEN, params.EMBEDDING_SIZE), return_sequences=True,
+            recurrent_dropout=0.4))
     attention = Lambda(lambda x: softmax(x))
     attention_in = Lambda(lambda x: batch_dot(x[0], x[1]))
     attention_matrix = Lambda(lambda x: batch_dot(x[0], x[1]))
     concat_layers = Lambda(lambda x: concatenate([x[0], x[1]], axis=-1))
     flatten = Flatten()
-    output_start = Dense(325, activation='softmax', kernel_regularizer=regularizers.l2(0.01),
+    output_start = Dense(params.CONTEXT_LEN, activation='softmax', kernel_regularizer=regularizers.l2(0.01),
                          bias_regularizer=regularizers.l2(0.01), name='p_start')
-    output_end = Dense(325, activation='softmax', kernel_regularizer=regularizers.l2(0.01),
+    output_end = Dense(params.CONTEXT_LEN, activation='softmax', kernel_regularizer=regularizers.l2(0.01),
                        bias_regularizer=regularizers.l2(0.01), name='p_end')
 
     # Since using sigmoid and binary_crossentropy along with categorical will require a custom loss function,
@@ -46,8 +52,8 @@ def build_model(tokenizer):
 
     question_encoder_out = Lambda(lambda x: reshape(x, in_shape))(question_encoder_output)
     attention_in = attention_in([context_encoder_output, question_encoder_out])
-    attention_out = attention(attention_in)  # 1000 x 50
-    attention_matrix = attention_matrix([attention_out, question_encoder_output])  # 1000 x 100
+    attention_out = attention(attention_in)
+    attention_matrix = attention_matrix([attention_out, question_encoder_output])
     concatenated = concat_layers([context_encoder_output, attention_matrix])
     concatenated = flatten(concatenated)
 
@@ -63,7 +69,7 @@ def build_model(tokenizer):
 
 def load_pretrained_embedding(glove_dir, embedding_dim, tokenizer):
     embeddings_index = {}
-    with open(os.path.join(glove_dir, 'glove.6B.50d.txt'), 'r') as f:
+    with open(os.path.join(glove_dir, 'glove.6B.{}d.txt'.format(embedding_dim)), 'r') as f:
         for line in f:
             values = line.split()
             word = values[0]

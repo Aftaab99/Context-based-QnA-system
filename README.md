@@ -8,9 +8,9 @@ Unlike the paper, this implementation is trained on SQUAD v2.0, which is a much 
 
 ## Setting up
 
-    conda env create --name qa_env -f=environments.yml
+    conda env create --name qa_env -f qnaenv.yaml
     
-To download the pretrained word embeddings, dataset and pretrained model run,
+To download the pretrained glove word embeddings, dataset and pretrained model run,
     
     python DownloadData.py 
 
